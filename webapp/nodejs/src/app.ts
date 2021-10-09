@@ -454,8 +454,17 @@ app.post("/api/estate/req_doc/:id", async (req, res, next) => {
   }
 });
 
+type Coordinate = {
+  longitude: number;
+  latitude: number;
+};
+type Estate = {
+  id: number;
+  latitude: number;
+  longitude: number;
+};
 app.post("/api/estate/nazotte", async (req, res, next) => {
-  const coordinates = req.body.coordinates;
+  const coordinates: Coordinate[] = req.body.coordinates;
   const longitudes = coordinates.map((c) => c.longitude);
   const latitudes = coordinates.map((c) => c.latitude);
   const boundingbox = {
@@ -473,11 +482,6 @@ app.post("/api/estate/nazotte", async (req, res, next) => {
   const connection = await getConnection();
   const query = promisify(connection.query.bind(connection));
   try {
-    type Estate = {
-      id: number;
-      latitude: number;
-      longitude: number;
-    }
     const estates: Estate[] = await query(
       "SELECT * FROM estate WHERE latitude <= ? AND latitude >= ? AND longitude <= ? AND longitude >= ? ORDER BY popularity DESC, id ASC LIMIT ?",
       [
@@ -511,8 +515,8 @@ app.post("/api/estate/nazotte", async (req, res, next) => {
     });
 
     const resultEstates = (await Promise.all(queries))
-      .filter((e) => e && Object.keys(e).length > 0)
-      .map((e) => camelcaseKeys(e));
+      .filter(([e]) => e && Object.keys(e).length > 0)
+      .map(([e]) => camelcaseKeys(e));
 
     const results = {
       estates: resultEstates,
