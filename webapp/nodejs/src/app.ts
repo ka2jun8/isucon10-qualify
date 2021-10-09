@@ -1,15 +1,14 @@
 "use strict";
 
-const express = require("express");
-const morgan = require("morgan");
-const multer = require("multer");
-const mysql = require("mysql");
-const path = require("path");
-const cp = require("child_process");
-const util = require("util");
-const os = require("os");
-const parse = require("csv-parse/lib/sync");
-const camelcaseKeys = require("camelcase-keys");
+import express from "express";
+import morgan from "morgan";
+import multer from "multer";
+import mysql from "mysql";
+import path from "path";
+import cp from "child_process";
+import util from "util";
+import parse from "csv-parse/lib/sync";
+import camelcaseKeys from "camelcase-keys";
 const upload = multer();
 const promisify = util.promisify;
 const exec = promisify(cp.exec);
@@ -26,7 +25,7 @@ const dbinfo = {
   password: process.env.MYSQL_PASS ?? "isucon",
   database: process.env.MYSQL_DBNAME ?? "isuumo",
   connectionLimit: 10,
-};
+} as mysql.PoolConfig;
 
 const app = express();
 const db = mysql.createPool(dbinfo);
@@ -108,7 +107,7 @@ app.get("/api/chair/search", async (req, res, next) => {
   } = req.query;
 
   if (!!priceRangeId) {
-    const chairPrice = chairSearchCondition["price"].ranges[priceRangeId];
+    const chairPrice = chairSearchCondition["price"].ranges[priceRangeId as string];
     if (chairPrice == null) {
       res.status(400).send("priceRangeID invalid");
       return;
@@ -126,7 +125,7 @@ app.get("/api/chair/search", async (req, res, next) => {
   }
 
   if (!!heightRangeId) {
-    const chairHeight = chairSearchCondition["height"].ranges[heightRangeId];
+    const chairHeight = chairSearchCondition["height"].ranges[heightRangeId as string];
     if (chairHeight == null) {
       res.status(400).send("heightRangeId invalid");
       return;
@@ -144,7 +143,7 @@ app.get("/api/chair/search", async (req, res, next) => {
   }
 
   if (!!widthRangeId) {
-    const chairWidth = chairSearchCondition["width"].ranges[widthRangeId];
+    const chairWidth = chairSearchCondition["width"].ranges[widthRangeId as string];
     if (chairWidth == null) {
       res.status(400).send("widthRangeId invalid");
       return;
@@ -162,7 +161,7 @@ app.get("/api/chair/search", async (req, res, next) => {
   }
 
   if (!!depthRangeId) {
-    const chairDepth = chairSearchCondition["depth"].ranges[depthRangeId];
+    const chairDepth = chairSearchCondition["depth"].ranges[depthRangeId as string];
     if (chairDepth == null) {
       res.status(400).send("depthRangeId invalid");
       return;
@@ -190,7 +189,7 @@ app.get("/api/chair/search", async (req, res, next) => {
   }
 
   if (!!features) {
-    const featureConditions = features.split(",");
+    const featureConditions = (features as string).split(",");
     for (const featureCondition of featureConditions) {
       searchQueries.push("features LIKE CONCAT('%', ?, '%')");
       queryParams.push(featureCondition);
@@ -204,18 +203,18 @@ app.get("/api/chair/search", async (req, res, next) => {
 
   searchQueries.push("stock > 0");
 
-  if (!page || page != +page) {
+  if (!page) {
     res.status(400).send(`page condition invalid ${page}`);
     return;
   }
 
-  if (!perPage || perPage != +perPage) {
+  if (!perPage) {
     res.status(400).send("perPage condition invalid");
     return;
   }
 
-  const pageNum = parseInt(page, 10);
-  const perPageNum = parseInt(perPage, 10);
+  const pageNum = parseInt(page as string, 10);
+  const perPageNum = parseInt(perPage as string, 10);
 
   const sqlprefix = "SELECT * FROM chair WHERE ";
   const searchCondition = searchQueries.join(" AND ");
@@ -318,7 +317,7 @@ app.get("/api/estate/search", async (req, res, next) => {
 
   if (!!doorHeightRangeId) {
     const doorHeight =
-      estateSearchCondition["doorHeight"].ranges[doorHeightRangeId];
+      estateSearchCondition["doorHeight"].ranges[doorHeightRangeId as string];
     if (doorHeight == null) {
       res.status(400).send("doorHeightRangeId invalid");
       return;
@@ -337,7 +336,7 @@ app.get("/api/estate/search", async (req, res, next) => {
 
   if (!!doorWidthRangeId) {
     const doorWidth =
-      estateSearchCondition["doorWidth"].ranges[doorWidthRangeId];
+      estateSearchCondition["doorWidth"].ranges[doorWidthRangeId as string];
     if (doorWidth == null) {
       res.status(400).send("doorWidthRangeId invalid");
       return;
@@ -355,7 +354,7 @@ app.get("/api/estate/search", async (req, res, next) => {
   }
 
   if (!!rentRangeId) {
-    const rent = estateSearchCondition["rent"].ranges[rentRangeId];
+    const rent = estateSearchCondition["rent"].ranges[rentRangeId as string];
     if (rent == null) {
       res.status(400).send("rentRangeId invalid");
       return;
@@ -373,7 +372,7 @@ app.get("/api/estate/search", async (req, res, next) => {
   }
 
   if (!!features) {
-    const featureConditions = features.split(",");
+    const featureConditions = (features as string).split(",");
     for (const featureCondition of featureConditions) {
       searchQueries.push("features LIKE CONCAT('%', ?, '%')");
       queryParams.push(featureCondition);
@@ -385,18 +384,18 @@ app.get("/api/estate/search", async (req, res, next) => {
     return;
   }
 
-  if (!page || page != +page) {
+  if (!page) {
     res.status(400).send(`page condition invalid ${page}`);
     return;
   }
 
-  if (!perPage || perPage != +perPage) {
+  if (!perPage) {
     res.status(400).send("perPage condition invalid");
     return;
   }
 
-  const pageNum = parseInt(page, 10);
-  const perPageNum = parseInt(perPage, 10);
+  const pageNum = parseInt(page as string, 10);
+  const perPageNum = parseInt(perPage as string, 10);
 
   const sqlprefix = "SELECT * FROM estate WHERE ";
   const searchCondition = searchQueries.join(" AND ");
@@ -506,6 +505,7 @@ app.post("/api/estate/nazotte", async (req, res, next) => {
 
     const results = {
       estates: [],
+      count: 0,
     };
     let i = 0;
     for (const estate of estatesInPolygon) {
@@ -576,7 +576,7 @@ app.post("/api/chair", upload.single("chairs"), async (req, res, next) => {
   const rollback = promisify(connection.rollback.bind(connection));
   try {
     await beginTransaction();
-    const csv = parse(req.file.buffer, { skip_empty_line: true });
+    const csv = parse(req.file.buffer, { skip_empty_lines: true });
     for (var i = 0; i < csv.length; i++) {
       const items = csv[i];
       await query(
@@ -604,7 +604,7 @@ app.post("/api/estate", upload.single("estates"), async (req, res, next) => {
   const rollback = promisify(connection.rollback.bind(connection));
   try {
     await beginTransaction();
-    const csv = parse(req.file.buffer, { skip_empty_line: true });
+    const csv = parse(req.file.buffer, { skip_empty_lines: true });
     for (var i = 0; i < csv.length; i++) {
       const items = csv[i];
       await query(
