@@ -9,6 +9,9 @@ import cp from "child_process";
 import util from "util";
 import parse from "csv-parse/lib/sync";
 import camelcaseKeys from "camelcase-keys";
+import userAgent from "express-useragent";
+import { blockUserAgent } from "./blockUserAgent";
+
 const upload = multer();
 const promisify = util.promisify;
 const exec = promisify(cp.exec);
@@ -33,6 +36,8 @@ app.set("db", db);
 
 app.use(morgan("combined"));
 app.use(express.json());
+app.use(userAgent.express());
+app.use(blockUserAgent);
 app.post("/initialize", async (req, res, next) => {
   try {
     const dbdir = path.resolve("..", "mysql", "db");
