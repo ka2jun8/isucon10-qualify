@@ -36,3 +36,11 @@ CREATE TABLE isuumo.chair
     popularity  INTEGER         NOT NULL,
     stock       INTEGER         NOT NULL
 );
+
+USE isuumo;
+ALTER TABLE chair ADD INDEX price_index(price);
+ALTER TABLE chair ADD INDEX stock_index(stock);
+ALTER TABLE estate ADD INDEX rent_index(rent);
+ANALYZE TABLE chair;
+ANALYZE TABLE  estate;
+
