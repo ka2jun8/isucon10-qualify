@@ -11,12 +11,14 @@ import parse from "csv-parse/lib/sync";
 import camelcaseKeys from "camelcase-keys";
 import userAgent from "express-useragent";
 import { blockUserAgent } from "./blockUserAgent";
+import { cacheHandler, createKey, getMemoryCache } from "./cache";
 
 const upload = multer();
 const promisify = util.promisify;
 const exec = promisify(cp.exec);
 const chairSearchCondition = require("../../fixture/chair_condition.json");
 const estateSearchCondition = require("../../fixture/estate_condition.json");
+const cache = getMemoryCache();
 
 const PORT = process.env.PORT ?? 1323;
 const LIMIT = 20;
@@ -38,6 +40,7 @@ app.use(morgan("combined"));
 app.use(express.json());
 app.use(userAgent.express());
 app.use(blockUserAgent);
+app.use(cacheHandler);
 app.post("/initialize", async (req, res, next) => {
   try {
     const dbdir = path.resolve("..", "mysql", "db");
@@ -70,6 +73,7 @@ app.get("/api/estate/low_priced", async (req, res, next) => {
       [LIMIT]
     );
     const estates = es.map((estate) => camelcaseKeys(estate));
+    cache.set(createKey(req), { estates });
     res.json({ estates });
   } catch (e) {
     next(e);
@@ -88,6 +92,7 @@ app.get("/api/chair/low_priced", async (req, res, next) => {
       [LIMIT]
     );
     const chairs = cs.map((chair) => camelcaseKeys(chair));
+    cache.set(createKey(req), { chairs });
     res.json({ chairs });
   } catch (e) {
     next(e);
@@ -239,6 +244,10 @@ app.get("/api/chair/search", async (req, res, next) => {
       `${sqlprefix}${searchCondition}${limitOffset}`,
       queryParams
     );
+    cache.set(createKey(req), {
+      count,
+      chairs: camelcaseKeys(chairs),
+    });
     res.json({
       count,
       chairs: camelcaseKeys(chairs),
@@ -251,6 +260,7 @@ app.get("/api/chair/search", async (req, res, next) => {
 });
 
 app.get("/api/chair/search/condition", (req, res, next) => {
+  cache.set(createKey(req), chairSearchCondition, 3600);
   res.json(chairSearchCondition);
 });
 
@@ -265,7 +275,9 @@ app.get("/api/chair/:id", async (req, res, next) => {
       res.status(404).send("Not Found");
       return;
     }
-    res.json(camelcaseKeys(chair));
+    const result = camelcaseKeys(chair)
+    cache.set(createKey(req), result);
+    res.json(result);
   } catch (e) {
     next(e);
   } finally {
@@ -420,6 +432,10 @@ app.get("/api/estate/search", async (req, res, next) => {
       `${sqlprefix}${searchCondition}${limitOffset}`,
       queryParams
     );
+    cache.set(createKey(req), {
+      count,
+      estates: camelcaseKeys(estates),
+    });
     res.json({
       count,
       estates: camelcaseKeys(estates),
@@ -506,7 +522,9 @@ app.get("/api/estate/:id", async (req, res, next) => {
       return;
     }
 
-    res.json(camelcaseKeys(estate));
+    const result = camelcaseKeys(estate);
+    cache.set(createKey(req), result);
+    res.json(result);
   } catch (e) {
     next(e);
   } finally {
@@ -529,6 +547,7 @@ app.get("/api/recommended_estate/:id", async (req, res, next) => {
       [w, h, w, d, h, w, h, d, d, w, d, h, LIMIT]
     );
     const estates = es.map((estate) => camelcaseKeys(estate));
+    cache.set(createKey(req), { estates });
     res.json({ estates });
   } catch (e) {
     next(e);
