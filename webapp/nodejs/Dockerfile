@@ -14,4 +14,5 @@ RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSI
 COPY package.json package.json
 COPY package-lock.json package-lock.json
 RUN npm ci
+RUN npm run build
 COPY . .
