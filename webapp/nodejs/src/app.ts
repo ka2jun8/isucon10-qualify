@@ -436,7 +436,6 @@ app.get("/api/estate/search/condition", (req, res, next) => {
 });
 
 app.post("/api/estate/req_doc/:id", async (req, res, next) => {
-  const id = req.params.id;
   const getConnection = promisify(db.getConnection.bind(db));
   const connection = await getConnection();
   const query = promisify(connection.query.bind(connection));
@@ -484,7 +483,12 @@ app.post("/api/estate/nazotte", async (req, res, next) => {
       ]
     );
 
-    const estatesInPolygon = [];
+    const polygon = coordinates
+      .map((coordinate) =>
+        util.format("%f %f", coordinate.latitude, coordinate.longitude)
+      )
+      .join(",");
+    const queries = [];
     for (const estate of estates) {
       const point = util.format(
         "'POINT(%f %f)'",
@@ -495,32 +499,21 @@ app.post("/api/estate/nazotte", async (req, res, next) => {
         "SELECT * FROM estate WHERE id = ? AND ST_Contains(ST_PolygonFromText(%s), ST_GeomFromText(%s))";
       const coordinatesToText = util.format(
         "'POLYGON((%s))'",
-        coordinates
-          .map((coordinate) =>
-            util.format("%f %f", coordinate.latitude, coordinate.longitude)
-          )
-          .join(",")
+        polygon,
       );
       const sqlstr = util.format(sql, coordinatesToText, point);
-      const [e] = await query(sqlstr, [estate.id]);
-      if (e && Object.keys(e).length > 0) {
-        estatesInPolygon.push(e);
-      }
+      const q = query(sqlstr, [estate.id]);
+      queries.push(q);
     }
 
+    const resultEstates = (await Promise.all(queries))
+      .filter(e => e && Object.keys(e).length > 0)
+      .map((e) => camelcaseKeys(e));
+
     const results = {
-      estates: [],
-      count: 0,
+      estates: resultEstates,
+      count: resultEstates.length,
     };
-    let i = 0;
-    for (const estate of estatesInPolygon) {
-      if (i >= NAZOTTE_LIMIT) {
-        break;
-      }
-      results.estates.push(camelcaseKeys(estate));
-      i++;
-    }
-    results.count = results.estates.length;
     res.json(results);
   } catch (e) {
     next(e);
@@ -582,6 +575,7 @@ app.post("/api/chair", upload.single("chairs"), async (req, res, next) => {
   try {
     await beginTransaction();
     const csv = parse(req.file.buffer, { skip_empty_lines: true });
+    // TODO Promise.all
     for (var i = 0; i < csv.length; i++) {
       const items = csv[i];
       await query(
@@ -610,6 +604,7 @@ app.post("/api/estate", upload.single("estates"), async (req, res, next) => {
   try {
     await beginTransaction();
     const csv = parse(req.file.buffer, { skip_empty_lines: true });
+    // TODO Promise.all
     for (var i = 0; i < csv.length; i++) {
       const items = csv[i];
       await query(
