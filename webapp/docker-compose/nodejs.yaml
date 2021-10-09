@@ -16,28 +16,28 @@ services:
     ports:
       - "3306:3306"
 
-  api-server:
-    build: ../nodejs
-    entrypoint:
-      - dockerize
-      - -timeout
-      - 60s
-      - -wait
-      - tcp://mysql:3306
-    volumes:
-      - ../mysql/db:/mysql/db
-      - ../fixture:/fixture
-    environment:
-      MYSQL_DBNAME: isuumo
-      MYSQL_USER: isucon
-      MYSQL_PASS: isucon
-      MYSQL_HOST: mysql
-      SERVER_PORT: 1323
-    ports:
-      - "1323:1323"
-    depends_on:
-      - mysql
-    command: npm start
+  # api-server:
+  #   build: ../nodejs
+  #   entrypoint:
+  #     - dockerize
+  #     - -timeout
+  #     - 60s
+  #     - -wait
+  #     - tcp://mysql:3306
+  #   volumes:
+  #     - ../mysql/db:/mysql/db
+  #     - ../fixture:/fixture
+  #   environment:
+  #     MYSQL_DBNAME: isuumo
+  #     MYSQL_USER: isucon
+  #     MYSQL_PASS: isucon
+  #     MYSQL_HOST: mysql
+  #     SERVER_PORT: 1323
+  #   ports:
+  #     - "1323:1323"
+  #   depends_on:
+  #     - mysql
+  #   command: npm start
 
   frontend:
     build: ../frontend
