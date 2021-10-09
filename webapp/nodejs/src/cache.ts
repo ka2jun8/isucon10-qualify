@@ -80,7 +80,7 @@ export const cacheHandler: Handler = (req, res, next) => {
   const { path, params, method } = req;
   console.log({path,params,method})
   if(method !== "GET") {
-    next();
+    return next();
   }
   const memoryCache = getMemoryCache();
   const key = createKey(req);
