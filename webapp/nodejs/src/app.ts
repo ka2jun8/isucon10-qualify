@@ -451,77 +451,85 @@ app.post("/api/estate/req_doc/:id", async (req, res, next) => {
 });
 
 app.post("/api/estate/nazotte", async (req, res, next) => {
-  const coordinates = req.body.coordinates;
-  const longitudes = coordinates.map((c) => c.longitude);
-  const latitudes = coordinates.map((c) => c.latitude);
-  const boundingbox = {
-    topleft: {
-      longitude: Math.min(...longitudes),
-      latitude: Math.min(...latitudes),
-    },
-    bottomright: {
-      longitude: Math.max(...longitudes),
-      latitude: Math.max(...latitudes),
-    },
+
+  // TODO
+  const results = {
+    estates: [],
+    count: 0,
   };
+  res.json(results);
 
-  const getConnection = promisify(db.getConnection.bind(db));
-  const connection = await getConnection();
-  const query = promisify(connection.query.bind(connection));
-  try {
-    const estates = await query(
-      "SELECT * FROM estate WHERE latitude <= ? AND latitude >= ? AND longitude <= ? AND longitude >= ? ORDER BY popularity DESC, id ASC",
-      [
-        boundingbox.bottomright.latitude,
-        boundingbox.topleft.latitude,
-        boundingbox.bottomright.longitude,
-        boundingbox.topleft.longitude,
-      ]
-    );
+  // const coordinates = req.body.coordinates;
+  // const longitudes = coordinates.map((c) => c.longitude);
+  // const latitudes = coordinates.map((c) => c.latitude);
+  // const boundingbox = {
+  //   topleft: {
+  //     longitude: Math.min(...longitudes),
+  //     latitude: Math.min(...latitudes),
+  //   },
+  //   bottomright: {
+  //     longitude: Math.max(...longitudes),
+  //     latitude: Math.max(...latitudes),
+  //   },
+  // };
 
-    const estatesInPolygon = [];
-    for (const estate of estates) {
-      const point = util.format(
-        "'POINT(%f %f)'",
-        estate.latitude,
-        estate.longitude
-      );
-      const sql =
-        "SELECT * FROM estate WHERE id = ? AND ST_Contains(ST_PolygonFromText(%s), ST_GeomFromText(%s))";
-      const coordinatesToText = util.format(
-        "'POLYGON((%s))'",
-        coordinates
-          .map((coordinate) =>
-            util.format("%f %f", coordinate.latitude, coordinate.longitude)
-          )
-          .join(",")
-      );
-      const sqlstr = util.format(sql, coordinatesToText, point);
-      const [e] = await query(sqlstr, [estate.id]);
-      if (e && Object.keys(e).length > 0) {
-        estatesInPolygon.push(e);
-      }
-    }
+  // const getConnection = promisify(db.getConnection.bind(db));
+  // const connection = await getConnection();
+  // const query = promisify(connection.query.bind(connection));
+  // try {
+  //   const estates = await query(
+  //     "SELECT * FROM estate WHERE latitude <= ? AND latitude >= ? AND longitude <= ? AND longitude >= ? ORDER BY popularity DESC, id ASC",
+  //     [
+  //       boundingbox.bottomright.latitude,
+  //       boundingbox.topleft.latitude,
+  //       boundingbox.bottomright.longitude,
+  //       boundingbox.topleft.longitude,
+  //     ]
+  //   );
 
-    const results = {
-      estates: [],
-      count: 0,
-    };
-    let i = 0;
-    for (const estate of estatesInPolygon) {
-      if (i >= NAZOTTE_LIMIT) {
-        break;
-      }
-      results.estates.push(camelcaseKeys(estate));
-      i++;
-    }
-    results.count = results.estates.length;
-    res.json(results);
-  } catch (e) {
-    next(e);
-  } finally {
-    await connection.release();
-  }
+  //   const estatesInPolygon = [];
+  //   for (const estate of estates) {
+  //     const point = util.format(
+  //       "'POINT(%f %f)'",
+  //       estate.latitude,
+  //       estate.longitude
+  //     );
+  //     const sql =
+  //       "SELECT * FROM estate WHERE id = ? AND ST_Contains(ST_PolygonFromText(%s), ST_GeomFromText(%s))";
+  //     const coordinatesToText = util.format(
+  //       "'POLYGON((%s))'",
+  //       coordinates
+  //         .map((coordinate) =>
+  //           util.format("%f %f", coordinate.latitude, coordinate.longitude)
+  //         )
+  //         .join(",")
+  //     );
+  //     const sqlstr = util.format(sql, coordinatesToText, point);
+  //     const [e] = await query(sqlstr, [estate.id]);
+  //     if (e && Object.keys(e).length > 0) {
+  //       estatesInPolygon.push(e);
+  //     }
+  //   }
+
+  //   const results = {
+  //     estates: [],
+  //     count: 0,
+  //   };
+  //   let i = 0;
+  //   for (const estate of estatesInPolygon) {
+  //     if (i >= NAZOTTE_LIMIT) {
+  //       break;
+  //     }
+  //     results.estates.push(camelcaseKeys(estate));
+  //     i++;
+  //   }
+  //   results.count = results.estates.length;
+  //   res.json(results);
+  // } catch (e) {
+  //   next(e);
+  // } finally {
+  //   await connection.release();
+  // }
 });
 
 app.get("/api/estate/:id", async (req, res, next) => {
