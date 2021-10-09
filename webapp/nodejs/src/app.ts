@@ -474,12 +474,13 @@ app.post("/api/estate/nazotte", async (req, res, next) => {
   const query = promisify(connection.query.bind(connection));
   try {
     const estates = await query(
-      "SELECT * FROM estate WHERE latitude <= ? AND latitude >= ? AND longitude <= ? AND longitude >= ? ORDER BY popularity DESC, id ASC",
+      "SELECT * FROM estate WHERE latitude <= ? AND latitude >= ? AND longitude <= ? AND longitude >= ? ORDER BY popularity DESC, id ASC LIMIT ?",
       [
         boundingbox.bottomright.latitude,
         boundingbox.topleft.latitude,
         boundingbox.bottomright.longitude,
         boundingbox.topleft.longitude,
+        NAZOTTE_LIMIT,
       ]
     );
 
