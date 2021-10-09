@@ -473,7 +473,12 @@ app.post("/api/estate/nazotte", async (req, res, next) => {
   const connection = await getConnection();
   const query = promisify(connection.query.bind(connection));
   try {
-    const estates = await query(
+    type Estate = {
+      id: number;
+      latitude: number;
+      longitude: number;
+    }
+    const estates: Estate[] = await query(
       "SELECT * FROM estate WHERE latitude <= ? AND latitude >= ? AND longitude <= ? AND longitude >= ? ORDER BY popularity DESC, id ASC LIMIT ?",
       [
         boundingbox.bottomright.latitude,
@@ -489,26 +494,24 @@ app.post("/api/estate/nazotte", async (req, res, next) => {
         util.format("%f %f", coordinate.latitude, coordinate.longitude)
       )
       .join(",");
-    const queries = [];
-    for (const estate of estates) {
-      const point = util.format(
-        "'POINT(%f %f)'",
-        estate.latitude,
-        estate.longitude
-      );
+    const queries = estates.map((estate) => {
       const sql =
         "SELECT * FROM estate WHERE id = ? AND ST_Contains(ST_PolygonFromText(%s), ST_GeomFromText(%s))";
       const coordinatesToText = util.format(
         "'POLYGON((%s))'",
         polygon,
       );
+      const point = util.format(
+        "'POINT(%f %f)'",
+        estate.latitude,
+        estate.longitude
+      );
       const sqlstr = util.format(sql, coordinatesToText, point);
-      const q = query(sqlstr, [estate.id]);
-      queries.push(q);
-    }
+      return query(sqlstr, [estate.id]) as Promise<any>;
+    });
 
     const resultEstates = (await Promise.all(queries))
-      .filter(e => e && Object.keys(e).length > 0)
+      .filter((e) => e && Object.keys(e).length > 0)
       .map((e) => camelcaseKeys(e));
 
     const results = {
