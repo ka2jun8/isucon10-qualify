@@ -245,11 +245,11 @@ app.get("/api/chair/search", async (req, res, next) => {
       `${sqlprefix}${searchCondition}${limitOffset}`,
       queryParams
     );
-    // TODO
-    // cache.set(createKey(req), {
-    //   count,
-    //   chairs: camelcaseKeys(chairs),
-    // });
+    
+    cache.set(createKey(req), {
+      count,
+      chairs: camelcaseKeys(chairs),
+    });
     res.json({
       count,
       chairs: camelcaseKeys(chairs),
@@ -435,10 +435,11 @@ app.get("/api/estate/search", async (req, res, next) => {
       `${sqlprefix}${searchCondition}${limitOffset}`,
       queryParams
     );
+
     // TODO
     // cache.set(createKey(req), {
-    //   count,
-    //   estates: camelcaseKeys(estates),
+    //  count,
+    //  estates: camelcaseKeys(estates),
     // });
     res.json({
       count,
@@ -552,8 +553,7 @@ app.get("/api/recommended_estate/:id", async (req, res, next) => {
       [w, h, w, d, h, w, h, d, d, w, d, h, LIMIT]
     );
     const estates = es.map((estate) => camelcaseKeys(estate));
-    // TODO
-    // cache.set(createKey(req), { estates });
+    cache.set(createKey(req), { estates });
     res.json({ estates });
   } catch (e) {
     next(e);
