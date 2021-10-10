@@ -286,6 +286,7 @@ app.get("/api/chair/:id", async (req, res, next) => {
 });
 
 app.post("/api/chair/buy/:id", async (req, res, next) => {
+  cache.purgeAll();
   const getConnection = promisify(db.getConnection.bind(db));
   const connection = await getConnection();
   const beginTransaction = promisify(connection.beginTransaction.bind(connection));
@@ -557,6 +558,7 @@ app.get("/api/recommended_estate/:id", async (req, res, next) => {
 });
 
 app.post("/api/chair", upload.single("chairs"), async (req, res, next) => {
+  cache.purgeAll();
   const getConnection = promisify(db.getConnection.bind(db));
   const connection = await getConnection();
   const beginTransaction = promisify(connection.beginTransaction.bind(connection));
@@ -585,6 +587,7 @@ app.post("/api/chair", upload.single("chairs"), async (req, res, next) => {
 });
 
 app.post("/api/estate", upload.single("estates"), async (req, res, next) => {
+  cache.purgeAll();
   const getConnection = promisify(db.getConnection.bind(db));
   const connection = await getConnection();
   const beginTransaction = promisify(connection.beginTransaction.bind(connection));
