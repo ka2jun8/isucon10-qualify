@@ -42,6 +42,7 @@ app.use(userAgent.express());
 app.use(blockUserAgent);
 app.use(cacheHandler);
 app.post("/initialize", async (req, res, next) => {
+  cache.purgeAll();
   try {
     const dbdir = path.resolve("..", "mysql", "db");
     const dbfiles = [
@@ -92,7 +93,8 @@ app.get("/api/chair/low_priced", async (req, res, next) => {
       [LIMIT]
     );
     const chairs = cs.map((chair) => camelcaseKeys(chair));
-    cache.set(createKey(req), { chairs });
+    // TODO
+    // cache.set(createKey(req), { chairs });
     res.json({ chairs });
   } catch (e) {
     next(e);
@@ -244,10 +246,11 @@ app.get("/api/chair/search", async (req, res, next) => {
       `${sqlprefix}${searchCondition}${limitOffset}`,
       queryParams
     );
-    cache.set(createKey(req), {
-      count,
-      chairs: camelcaseKeys(chairs),
-    });
+    // TODO
+    // cache.set(createKey(req), {
+    //   count,
+    //   chairs: camelcaseKeys(chairs),
+    // });
     res.json({
       count,
       chairs: camelcaseKeys(chairs),
@@ -276,7 +279,8 @@ app.get("/api/chair/:id", async (req, res, next) => {
       return;
     }
     const result = camelcaseKeys(chair)
-    cache.set(createKey(req), result);
+    // TODO
+    // cache.set(createKey(req), result);
     res.json(result);
   } catch (e) {
     next(e);
@@ -433,10 +437,11 @@ app.get("/api/estate/search", async (req, res, next) => {
       `${sqlprefix}${searchCondition}${limitOffset}`,
       queryParams
     );
-    cache.set(createKey(req), {
-      count,
-      estates: camelcaseKeys(estates),
-    });
+    // TODO
+    // cache.set(createKey(req), {
+    //   count,
+    //   estates: camelcaseKeys(estates),
+    // });
     res.json({
       count,
       estates: camelcaseKeys(estates),
@@ -449,6 +454,7 @@ app.get("/api/estate/search", async (req, res, next) => {
 });
 
 app.get("/api/estate/search/condition", (req, res, next) => {
+  cache.set(createKey(req), estateSearchCondition);
   res.json(estateSearchCondition);
 });
 
@@ -524,7 +530,8 @@ app.get("/api/estate/:id", async (req, res, next) => {
     }
 
     const result = camelcaseKeys(estate);
-    cache.set(createKey(req), result);
+    // TODO
+    // cache.set(createKey(req), result);
     res.json(result);
   } catch (e) {
     next(e);
@@ -548,7 +555,8 @@ app.get("/api/recommended_estate/:id", async (req, res, next) => {
       [w, h, w, d, h, w, h, d, d, w, d, h, LIMIT]
     );
     const estates = es.map((estate) => camelcaseKeys(estate));
-    cache.set(createKey(req), { estates });
+    // TODO
+    // cache.set(createKey(req), { estates });
     res.json({ estates });
   } catch (e) {
     next(e);
