@@ -17,7 +17,8 @@ CREATE TABLE isuumo.estate
     door_height INTEGER             NOT NULL,
     door_width  INTEGER             NOT NULL,
     features    VARCHAR(64)         NOT NULL,
-    popularity  INTEGER             NOT NULL
+    popularity  INTEGER             NOT NULL,
+    popularity_desc INTEGER AS (-popularity) NOT NULL
 );
 
 CREATE TABLE isuumo.chair
@@ -41,6 +42,7 @@ USE isuumo;
 ALTER TABLE chair ADD INDEX price_index(price);
 ALTER TABLE chair ADD INDEX stock_index(stock);
 ALTER TABLE estate ADD INDEX rent_index(rent);
+ALTER TABLE estate ADD INDEX estate_popularity_id_idx(popularity_desc, id); 
 ANALYZE TABLE chair;
 ANALYZE TABLE  estate;
 
