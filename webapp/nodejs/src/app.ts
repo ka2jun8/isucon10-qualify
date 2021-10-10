@@ -223,7 +223,7 @@ app.get("/api/chair/search", async (req, res, next) => {
 
   const sqlprefix = "SELECT * FROM chair WHERE ";
   const searchCondition = searchQueries.join(" AND ");
-  const limitOffset = " ORDER BY popularity DESC, id ASC LIMIT ? OFFSET ?";
+  const limitOffset = " ORDER BY popularity_desc, id ASC LIMIT ? OFFSET ?";
   const countprefix = "SELECT COUNT(*) as count FROM chair WHERE ";
 
   const getConnection = promisify(db.getConnection.bind(db));
@@ -404,7 +404,7 @@ app.get("/api/estate/search", async (req, res, next) => {
 
   const sqlprefix = "SELECT * FROM estate WHERE ";
   const searchCondition = searchQueries.join(" AND ");
-  const limitOffset = " ORDER BY popularity DESC, id ASC LIMIT ? OFFSET ?";
+  const limitOffset = " ORDER BY popularity_desc, id ASC LIMIT ? OFFSET ?";
   const countprefix = "SELECT COUNT(*) as count FROM estate WHERE ";
 
   const getConnection = promisify(db.getConnection.bind(db));
@@ -465,58 +465,22 @@ type Estate = {
 };
 app.post("/api/estate/nazotte", async (req, res, next) => {
   const coordinates: Coordinate[] = req.body.coordinates;
-  const longitudes = coordinates.map((c) => c.longitude);
-  const latitudes = coordinates.map((c) => c.latitude);
-  const boundingbox = {
-    topleft: {
-      longitude: Math.min(...longitudes),
-      latitude: Math.min(...latitudes),
-    },
-    bottomright: {
-      longitude: Math.max(...longitudes),
-      latitude: Math.max(...latitudes),
-    },
-  };
-
   const getConnection = promisify(db.getConnection.bind(db));
   const connection = await getConnection();
   const query = promisify(connection.query.bind(connection));
   try {
-    const estates: Estate[] = await query(
-      "SELECT * FROM estate WHERE latitude <= ? AND latitude >= ? AND longitude <= ? AND longitude >= ? ORDER BY popularity DESC, id ASC",
-      [
-        boundingbox.bottomright.latitude,
-        boundingbox.topleft.latitude,
-        boundingbox.bottomright.longitude,
-        boundingbox.topleft.longitude,
-      ]
-    );
-
-    const polygon = coordinates
-      .map((coordinate) =>
-        util.format("%f %f", coordinate.latitude, coordinate.longitude)
-      )
-      .join(",");
-    const queries = estates.map((estate) => {
-      const sql =
-        "SELECT * FROM estate WHERE id = ? AND ST_Contains(ST_PolygonFromText(%s), ST_GeomFromText(%s))";
-      const coordinatesToText = util.format(
-        "'POLYGON((%s))'",
-        polygon,
-      );
-      const point = util.format(
-        "'POINT(%f %f)'",
-        estate.latitude,
-        estate.longitude
-      );
-      const sqlstr = util.format(sql, coordinatesToText, point);
-      return query(sqlstr, [estate.id]) as Promise<any>;
-    });
-
-    const resultEstates = (await Promise.all(queries))
-      .filter(([e]) => e && Object.keys(e).length > 0)
-      .map(([e]) => camelcaseKeys(e))
-      .slice(0, NAZOTTE_LIMIT);
+    const sql = "SELECT * FROM estate WHERE ST_Contains(ST_PolygonFromText(%s), point) ORDER BY popularity_desc, id LIMIT ?";
+    const sqlstr = util.format(sql, util.format(
+      "'POLYGON((%s))'",
+      coordinates
+        .map((coordinate) =>
+          util.format("%f %f", coordinate.latitude, coordinate.longitude)
+        )
+        .join(","),
+    ));
+    const result = await query(sqlstr, NAZOTTE_LIMIT)
+    const resultEstates = result
+      .map((e) => camelcaseKeys(e));
 
     const results = {
       estates: resultEstates,
@@ -561,7 +525,7 @@ app.get("/api/recommended_estate/:id", async (req, res, next) => {
     const h = chair.height;
     const d = chair.depth;
     const es = await query(
-      "SELECT * FROM estate where (door_width >= ? AND door_height>= ?) OR (door_width >= ? AND door_height>= ?) OR (door_width >= ? AND door_height>=?) OR (door_width >= ? AND door_height>=?) OR (door_width >= ? AND door_height>=?) OR (door_width >= ? AND door_height>=?) ORDER BY popularity DESC, id ASC LIMIT ?",
+      "SELECT * FROM estate where (door_width >= ? AND door_height>= ?) OR (door_width >= ? AND door_height>= ?) OR (door_width >= ? AND door_height>=?) OR (door_width >= ? AND door_height>=?) OR (door_width >= ? AND door_height>=?) OR (door_width >= ? AND door_height>=?) ORDER BY popularity_desc, id ASC LIMIT ?",
       [w, h, w, d, h, w, h, d, d, w, d, h, LIMIT]
     );
     const estates = es.map((estate) => camelcaseKeys(estate));
