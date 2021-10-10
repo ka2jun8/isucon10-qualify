@@ -547,14 +547,13 @@ app.post("/api/chair", upload.single("chairs"), async (req, res, next) => {
   try {
     await beginTransaction();
     const csv = parse(req.file.buffer, { skip_empty_lines: true });
-    // TODO Promise.all
-    for (var i = 0; i < csv.length; i++) {
-      const items = csv[i];
-      await query(
+    const queries = csv.map((items) => {
+      return query(
         "INSERT INTO chair(id, name, description, thumbnail, price, height, width, depth, color, features, kind, popularity, stock) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)",
-        items
-      );
-    }
+        items,
+      )
+    })
+    await Promise.all(queries);
     await commit();
     res.status(201);
     res.json({ ok: true });
@@ -576,14 +575,13 @@ app.post("/api/estate", upload.single("estates"), async (req, res, next) => {
   try {
     await beginTransaction();
     const csv = parse(req.file.buffer, { skip_empty_lines: true });
-    // TODO Promise.all
-    for (var i = 0; i < csv.length; i++) {
-      const items = csv[i];
-      await query(
+    const queries = csv.map((items) => {
+      return query(
         "INSERT INTO estate(id, name, description, thumbnail, address, latitude, longitude, rent, door_height, door_width, features, popularity) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)",
-        items
-      );
-    }
+        items,
+      )
+    })
+    await Promise.all(queries);
     await commit();
     res.status(201);
     res.json({ ok: true });
