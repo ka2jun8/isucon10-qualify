@@ -68,7 +68,8 @@ export const getMemoryCache = (): MemoryCache => {
   if(memoryCache) {
     return memoryCache;
   }
-  return new MemoryCache();
+  memoryCache = new MemoryCache()
+  return memoryCache;
 };
 
 export const createKey = (req: Request) => {
@@ -77,15 +78,14 @@ export const createKey = (req: Request) => {
 }
 
 export const cacheHandler: Handler = (req, res, next) => {
-  const { path, params, method } = req;
-  console.log({path,params,method})
+  const { method } = req;
   if(method !== "GET") {
     return next();
   }
-  const memoryCache = getMemoryCache();
   const key = createKey(req);
-  const value = memoryCache.get(key);
+  const value = getMemoryCache().get(key);
   if(value) {
+    res.setHeader("x-express-cache", "true");
     res.send(value);
     return;
   }
