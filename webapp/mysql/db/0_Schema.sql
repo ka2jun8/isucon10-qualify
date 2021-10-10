@@ -46,6 +46,7 @@ ALTER TABLE chair ADD INDEX stock_index(stock);
 ALTER TABLE chair ADD INDEX chair_popularity_id_idx(popularity_desc, id); 
 ALTER TABLE estate ADD INDEX rent_index(rent);
 ALTER TABLE estate ADD INDEX estate_popularity_id_idx(popularity_desc, id); 
+ALTER TABLE estate ADD SPATIAL INDEX estate_point_idx(point);
 ANALYZE TABLE chair;
 ANALYZE TABLE  estate;
 
