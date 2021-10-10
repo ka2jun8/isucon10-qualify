@@ -9,7 +9,7 @@ type Cache = {
   };
 }
 
-const MAX_AGE = 60;
+const MAX_AGE = 10;
 
 class MemoryCache {
   cache: Cache;
