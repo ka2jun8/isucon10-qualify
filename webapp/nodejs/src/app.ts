@@ -93,8 +93,7 @@ app.get("/api/chair/low_priced", async (req, res, next) => {
       [LIMIT]
     );
     const chairs = cs.map((chair) => camelcaseKeys(chair));
-    // TODO
-    // cache.set(createKey(req), { chairs });
+    cache.set(createKey(req), { chairs });
     res.json({ chairs });
   } catch (e) {
     next(e);
@@ -279,8 +278,7 @@ app.get("/api/chair/:id", async (req, res, next) => {
       return;
     }
     const result = camelcaseKeys(chair)
-    // TODO
-    // cache.set(createKey(req), result);
+    cache.set(createKey(req), result);
     res.json(result);
   } catch (e) {
     next(e);
@@ -530,8 +528,7 @@ app.get("/api/estate/:id", async (req, res, next) => {
     }
 
     const result = camelcaseKeys(estate);
-    // TODO
-    // cache.set(createKey(req), result);
+    cache.set(createKey(req), result);
     res.json(result);
   } catch (e) {
     next(e);
